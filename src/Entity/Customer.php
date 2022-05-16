@@ -10,6 +10,8 @@ use ApiPlatform\Core\Annotation\ApiResource;
 use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
+
 
 #[ORM\Entity(repositoryClass: CustomerRepository::class)]
 #[ApiResource(
@@ -27,14 +29,20 @@ class Customer
 
     #[ORM\Column(type: 'string', length: 255)]
     #[Groups(["customers_read", "invoices_read"])]
+    #[Assert\NotBlank(message:"Le prénom est obligatoire")]
+    #[Assert\Length(min:3, max:255, minMessage:"Le prénom doit faire au moins 3 caractères", maxMessage:"Le prénom doit faire au plus 255 caractères")]
     private $firstName;
 
     #[ORM\Column(type: 'string', length: 255)]
     #[Groups(["customers_read", "invoices_read"])]
+    #[Assert\NotBlank(message:"Le nom est obligatoire")]
+    #[Assert\Length(min:3, max:255, minMessage:"Le nom doit faire au moins 3 caractères", maxMessage:"Le nom doit faire au plus 255 caractères")]
     private $lastName;
 
     #[ORM\Column(type: 'string', length: 255)]
     #[Groups(["customers_read", "invoices_read"])]
+    #[Assert\NotBlank(message:"L'email est obligatoire")]
+    #[Assert\Email(message:"Cet email n'est pas valide")]
 
     private $email;
 
@@ -49,6 +57,7 @@ class Customer
 
     #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'customers')]
     #[Groups(["customers_read", "invoices_read"])]
+    #[Assert\NotBlank(message:"L'utilisateur est obligatoire")]
     private $user;
 
     public function __construct()
