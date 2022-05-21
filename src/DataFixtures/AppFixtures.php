@@ -2,74 +2,78 @@
 
 namespace App\DataFixtures;
 
-use Faker\Factory;
-use App\Entity\User;
-use Faker\Generator;
-use App\Entity\Invoice;
 use App\Entity\Customer;
-use Doctrine\Persistence\ObjectManager;
+use App\Entity\Invoice;
+use App\Entity\User;
 use Doctrine\Bundle\FixturesBundle\Fixture;
+use Doctrine\Persistence\ObjectManager;
+use Faker\Factory;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
-
 class AppFixtures extends Fixture
-{ 
-   
-    /**
-     * @var Generator
-     */
-    private Generator $faker;
+{
+    /* 
+    * Password hasher
+    * @var UserPasswordHasherInterface
+    */
 
-    private UserPasswordHasherInterface $hasher;
+    private $encoder;
 
-    public function __construct(UserPasswordHasherInterface $hasher)
+    public function __construct(UserPasswordHasherInterface $encoder)
     {
-        $this->faker = Factory::create();
-        $this->hasher = $hasher;
+        $this->encoder = $encoder;
     }
 
     public function load(ObjectManager $manager): void
-    {   
-        for($u = 0; $u < 10; $u++) {
-            $user = new User();
-            $chrono = 1;
-            $user ->setFirstName($this->faker->firstName)
-                    ->setLastName($this->faker->lastName)
-                    ->setEmail($this->faker->email)
-                    ->setPassword("password");
+    {
+        // Set faker to fake french datas
+        $faker = Factory::create('fr_FR');
 
-                $hashPassword = $this -> hasher -> hashPassword($user, "password");
-                $user -> setPassword($hashPassword);
+        // Creating users
+        for ($u = 0; $u < 10; $u++) {
+            $user = new User();
+
+            // Chrono will be the invoice number
+            $chrono = 1;
+
+            // Hash a random password name
+            $hash = $this->encoder->hashPassword($user, "password");
+
+            $user->setFirstName($faker->firstName)
+                ->setLastName($faker->lastName)
+                ->setEmail($faker->email)
+                ->setPassword($hash);
 
             $manager->persist($user);
 
-        for($c = 0; $c < mt_rand(5, 20); $c++) {
-            $customer = new Customer();
-            $customer -> setFirstName($this -> faker -> firstName)
-                        -> setLastName($this -> faker -> lastName)
-                        -> setEmail($this -> faker -> email)
-                        -> setCompany($this -> faker -> company)
-                        -> setUser($user);
+            // Create between 5 to 20 Customers
+            for ($c = 0; $c < mt_rand(5, 20); $c++) {
+                $customer = new Customer();
+                $customer->setFirstName($faker->firstName)
+                    ->setLastName($faker->lastName)
+                    ->setCompany($faker->company)
+                    ->setEmail($faker->email)
+                    ->setUser($user);
 
-            $manager -> persist($customer);
 
-        for($i = 0; $i < 10; $i++) {
-            $invoice = new Invoice();
-            $invoice -> setAmount($this -> faker -> randomFloat(2, 0, 100))
-                    -> setSentAt($this -> faker -> dateTimeBetween('-1 years', 'now'))
-                    ->setStatus($this -> faker -> randomElement(['SENT', 'PAID', 'CANCELED']))
-                    ->setCustomer($customer)
-                    ->setChrono($chrono);
-            
-            $manager -> persist($invoice);
-            $chrono++;
+                $manager->persist($customer);
+                // For each customer, make invoices between 3 to 10
+                for ($i = 0; $i < mt_rand(3, 10); $i++) {
+                    $invoice = new Invoice();
+                    $invoice->setAmount($faker->randomFloat(2, 250, 14500))
+                        ->setSentAt($faker->dateTimeBetween('-6months'))
+                        ->setStatus($faker->randomElement(['SENT', 'PAID', 'CANCELLED']))
+                        ->setCustomer($customer)
+                        ->setChrono($chrono);
+
+                    $chrono++;
+
+                    $manager->persist($invoice);
+                }
+            }
         }
-        }            
-        }
-        
-        
-        // $product = new Product();
-        // $manager->persist($product);
+
+
 
         $manager->flush();
     }

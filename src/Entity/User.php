@@ -10,36 +10,49 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Validator\Constraints as Assert;
+
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
-#[ApiResource]
+#[ApiResource(
+    normalizationContext: [
+        "groups" => ["user:read"]
+    ],
+)]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: 'integer')]
-    #[Groups(["customers_read", "invoices_read"])]
+    #[Groups(["customers_read", "invoices_read", "user:read"])]
     private $id;
 
     #[ORM\Column(type: 'string', length: 180, unique: true)]
     #[Groups(["customers_read", "invoices_read"])]
+    #[Assert\NotBlank(message:"L'email est obligatoire")]
+    #[Assert\Email(message:"Cet email n'est pas valide")]
+    #[Assert\Length(min:3, max:180, minMessage:"L'email doit faire au moins 3 caractères", maxMessage:"L'email doit faire au plus 180 caractères")]    
     private $email;
 
     #[ORM\Column(type: 'json')]
-    #[Groups(["customers_read", "invoices_read"])]
+    #[Groups(["customers_read", "invoices_read", "user:read"])]
 
     private $roles = [];
 
     #[ORM\Column(type: 'string')]
     #[Groups(["customers_read", "invoices_read"])]
+    #[Assert\NotBlank(message:"Le mot de passe est obligatoire")]
+    #[Assert\Length(min:8, max:255, minMessage:"Le mot de passe doit faire au moins 8 caractères", maxMessage:"Le mot de passe doit faire au plus 255 caractères")]
     private $password;
 
     #[ORM\Column(type: 'string', length: 255)]
-    #[Groups(["customers_read", "invoices_read"])]
+    #[Groups(["customers_read", "invoices_read","user:read"])]
+    #[Assert\NotBlank(message:"Le prénom est obligatoire")]
+    #[Assert\Length(min:3, max:255, minMessage:"Le prénom doit faire au moins 3 caractères", maxMessage:"Le prénom doit faire au plus 255 caractères")]
     private $firstName;
 
     #[ORM\Column(type: 'string', length: 255)]
-    #[Groups(["customers_read", "invoices_read"])]
+    #[Groups(["customers_read", "invoices_read", "user:read"])]
     private $lastName;
 
     #[ORM\OneToMany(mappedBy: 'user', targetEntity: Customer::class)]
