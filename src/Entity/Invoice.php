@@ -19,7 +19,7 @@ use Symfony\Component\Validator\Constraints as Assert;
             'normalization_context' => ['groups' => ['invoices_subresource']],
         ]
         ],
-    paginationEnabled: true,   
+    paginationEnabled: false,   
     paginationItemsPerPage: 20,
     order: ["sentAt" => "DESC"],
     normalizationContext: ['groups' => ['invoices_read']],
